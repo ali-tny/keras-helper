@@ -30,7 +30,8 @@ class ImageDataGenerator(object):
         self.augment_func = augment_func
         self.class_mode = class_mode
 
-        self.label_mapping, self.labels = get_label_func(ref_file)
+        if self.class_mode == 'train':
+            self.label_mapping, self.labels = get_label_func(ref_file)
 
         self.generator = self.create_generator()
 
@@ -46,8 +47,6 @@ class ImageDataGenerator(object):
         while True:
             for _,_,files in os.walk(self.directory):
                 for fn in files:
-                    basename = os.path.splitext(os.path.basename(fn))[0]
-                    label_vec = self.onehot_labels(self.label_mapping[basename])
                     img = Image.open(self.directory+fn)
                     img.thumbnail(self.img_size) 
 
@@ -56,13 +55,26 @@ class ImageDataGenerator(object):
 
                     img_array = np.asarray(img.convert("RGB"),dtype=np.float32)
                     img_array = img_array/255
+
+                    basename = os.path.splitext(os.path.basename(fn))[0]
+                    if self.class_mode == 'train':
+                        file_labels = self.label_mapping[basename]
+                        label_vec = self.onehot_labels(file_labels)
+                        labels.append(label_vec)
                     images.append(img_array)
-                    labels.append(label_vec)
+
                     if len(images)==self.batch_size:
-                        yield (np.stack(images), np.stack(labels))
+                        if self.class_mode == 'train':
+                            yield (np.stack(images), np.stack(labels))
+                        else: 
+                            yield np.stack(images)
                         images = []
                         labels = []
-                yield (np.stack(images), np.stack(labels))
+
+                if self.class_mode == 'train':
+                    yield (np.stack(images), np.stack(labels))
+                else: 
+                    yield np.stack(images)
                 images = []
                 labels = []
 
