@@ -51,7 +51,8 @@ class ImageDataGenerator(object):
                     img = Image.open(self.directory+fn)
                     img.thumbnail(self.img_size) 
 
-                    img = self.augment_func(img)
+                    if self.augment_func is not None:
+                        img = self.augment_func(img)
 
                     img_array = np.asarray(img.convert("RGB"),dtype=np.float32)
                     img_array = img_array/255
