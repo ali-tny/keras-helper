@@ -1,6 +1,7 @@
 import os
 from PIL import Image
 import numpy as np
+from keras.utils.np_utils import to_categorical
 
 class ImageDataGenerator(object):
 
@@ -47,7 +48,7 @@ class ImageDataGenerator(object):
                 for fn in files:
                     basename = os.path.splitext(os.path.basename(fn))[0]
                     label_vec = self.onehot_labels(self.label_mapping[basename])
-                    img = Image.open(self.path+fn)
+                    img = Image.open(self.directory+fn)
                     img.thumbnail(self.img_size) 
 
                     img = self.augment_func(img)
