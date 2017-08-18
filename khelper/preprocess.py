@@ -4,10 +4,31 @@ import numpy as np
 from keras.utils.np_utils import to_categorical
 
 class ImageDataGenerator(object):
+    """Rewrite of keras.preprocessing.image.ImageDataGenerator. Allows the user
+    to give a reference file to specify the class label(s), and apply custom
+    data augmentation (see examples)
+    
+    Initialise then use as an iterator. Each call returns a tuple, with first
+    element an np.array representing a batch of image data, and if applicable
+    second tuple element an np.array representing a batch of labels."""
 
     def __init__(self, directory, img_size, batch_size=128, 
                 get_label_func=None, augment_func=None, ref_file=None,
                 class_mode='train'):
+        """
+            directory -- string directory path
+            img_size -- int[] 2-tuple of image size to return 
+            batch_size -- int (default 128) 
+            get_label_func -- callable function to get label, takes ref_file as
+                an argument (see examples) (default None)
+            augment_func -- callable function to augment image, takes and
+                returns Image.image (see examples) (default None)
+            ref_file -- string path to a reference file to give to the
+                get_label_func (default None)
+            class_mode -- string 'train' or 'test' whether to call label
+                function to find labels (or skip for test data)
+        """
+
         
         if not os.path.isdir(directory):
             raise Exception('Directory not found.')
@@ -42,6 +63,9 @@ class ImageDataGenerator(object):
         return self.generator.next()
 
     def create_generator(self):
+        """Returns a generator of (np.array, np.array) tuple of stacked image
+        data and stacked labels, or (np.array) stacked image data if
+        class_mode=test so there are no labels."""
         images = []
         labels = []
         while True:
@@ -79,6 +103,11 @@ class ImageDataGenerator(object):
                 labels = []
 
     def onehot_labels(self, strings):
+        """Turns string(s) into a (sum of) onehot vector(s) to represent labels.
+            
+            strings -- string[] or string an array of string label names or a
+                single string label name
+        """
         vector = np.zeros(len(self.labels))
         if type(strings) is list:
             for s in strings:
@@ -88,6 +117,7 @@ class ImageDataGenerator(object):
         return vector
 
     def _onehot_label(self, vector, string):
+        """Adds a onehot vector representing a label to an existing vector."""
         try:
             idx = self.labels.index(string)
             vector += to_categorical([idx], len(self.labels)).squeeze()
